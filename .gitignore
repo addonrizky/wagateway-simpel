@@ -1,0 +1,6 @@
+node_modules
+.wwebjs_cache
+package-lock.json
+.wwebjs_auth
+credentials.json
+notif.js
