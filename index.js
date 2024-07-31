@@ -159,7 +159,7 @@ app.get('/qr', async (req, res) => {
             res.send(connstate)
         }
 
-        messaging.getAndSend()
+        messaging.getAndSend(client)
     });
 
     handlingEventClient(client, userInfo[0])
@@ -254,6 +254,8 @@ async function startClient(withQR, userInfo){
     clientPre.on('ready', async () => {
         console.log(moment().format() + ': Client with id ' +userInfo.user_code+ ' is ready!');
         clientMap[userInfo.user_code] = {client: clientPre, statusConn : true, createdOn : Math.abs(new Date()), userInfo : userInfo}
+
+        messaging.getAndSend(clientPre)
     });
 
     handlingEventClient(clientPre, userInfo)
@@ -306,7 +308,7 @@ function handlingEventClient(client, userInfo){
                 return
             } 
 
-            callWebhook(msg, id)
+            // callWebhook(msg, id)
         } catch(e){
             console.log("error call webhook")
         }

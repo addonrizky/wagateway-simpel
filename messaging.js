@@ -1,10 +1,11 @@
 const http = require('http');
 const https = require('https');
+const axios = require('axios');
 
-exports.getAndSend = function () {
+exports.getAndSend = function (client) {
   const options = {
     hostname: process.env.API_URL,
-    port: process.env.API_PORT,
+    //port: process.env.API_PORT,
     path: process.env.SENDMESSAGE_PATH,
     method: 'GET',
     rejectUnauthorized: false,
@@ -12,8 +13,8 @@ exports.getAndSend = function () {
 
   setInterval(function () {
     console.log("get message");
-
-    const req = https.request(options, res => {
+    
+    const req = http.request(options, res => {
       console.log(`statusCode: ${res.statusCode}`);
 
       res.on('data', d => {
