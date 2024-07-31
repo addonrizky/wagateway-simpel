@@ -1,13 +1,13 @@
 version: "2"
 services:
     waengine:
-        image: bdt/wagateway-simpel
+        build: .
         ports: 
             - "3094:3093"
         volumes:
             - .:/app/
             - ./node_modules/:/app/node_modules
-            - ~/.ssh:/root/.ssh
+            # - ~/.ssh:/root/.ssh
         command: 
             - /bin/sh
             - -c
