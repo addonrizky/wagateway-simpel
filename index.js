@@ -6,7 +6,7 @@ const fs = require("fs");
 const sess = require("./session")
 const db = require('./config/database');
 const users = require('./database/users')
-const messaging = require('./messaging')
+// const messaging = require('./messaging')
 const moment = require('moment')
 const qrcode = require('qrcode-terminal');
 
@@ -159,7 +159,7 @@ app.get('/qr', async (req, res) => {
             res.send(connstate)
         }
 
-        messaging.getAndSend(client)
+        // messaging.getAndSend(client)
     });
 
     handlingEventClient(client, userInfo[0])
@@ -255,7 +255,7 @@ async function startClient(withQR, userInfo){
         console.log(moment().format() + ': Client with id ' +userInfo.user_code+ ' is ready!');
         clientMap[userInfo.user_code] = {client: clientPre, statusConn : true, createdOn : Math.abs(new Date()), userInfo : userInfo}
 
-        messaging.getAndSend(clientPre)
+        // messaging.getAndSend(clientPre)
     });
 
     handlingEventClient(clientPre, userInfo)

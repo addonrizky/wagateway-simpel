@@ -31,7 +31,7 @@ exports.getAndSend = function (client) {
             console.log("Send to = " + msg[i].no_hp);
             console.log("Message = " + msg[i].message);
 
-            client.sendMessage(number, pesan);
+            // client.sendMessage(number, pesan);
 
           }
 
