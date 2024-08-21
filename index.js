@@ -6,7 +6,7 @@ const fs = require("fs");
 const sess = require("./session")
 const db = require('./config/database');
 const users = require('./database/users')
-// const messaging = require('./messaging')
+const messaging = require('./messaging')
 const moment = require('moment')
 const qrcode = require('qrcode-terminal');
 
@@ -90,7 +90,8 @@ app.get('/qr', async (req, res) => {
     let counterResp = 0
     let diffGeneratedTime = 0
 
-    const userInfo = await users.getUser(id)
+    const userInfoRaw = await axios.get("http://"+process.env.API_URL + "/simpelapi/api/userwa/" + id)
+    const userInfo = userInfoRaw.data.message
 
     if (clientMap[id] && clientMap[id].statusConn == false) {
         connstate = await clientMap[id].client.getState()
@@ -152,41 +153,46 @@ app.get('/qr', async (req, res) => {
 
     client.on('ready', async() => {
         console.log(moment().format() + ': Client is ready!');
-        clientMap[id] = {client: client, statusConn : true, userInfo : userInfo[0]}
+        clientMap[id] = {client: client, statusConn : true, userInfo : userInfo}
 
         if(counterResp == 0) {
             const connstate = await client.getState()
             res.send(connstate)
         }
 
-        // messaging.getAndSend(client)
+        try{
+            await messaging.getAndSend(client)
+        } catch(e) {
+            console.log("error on get message : ", err)
+        }
+        
     });
 
-    handlingEventClient(client, userInfo[0])
+    handlingEventClient(client, userInfo)
 })
 
+let user_code = ""
+axios.get("http://"+process.env.API_URL + "/simpelapi/api/userwa/1")
+    .then(function(resp){
+        return resp.data.message.user_code
+    }).then(function(user_code){
 
-// Creating MySQL connection
-db.connect("mode_production", async function (err, rslt) {
-    if (err) {
-        console.log('Unable to connect to MySQL.');
-        process.exit(1);
-    } else {
-        sess.listDirectories('./.wwebjs_auth')
-        .then(async function(listDir){
-            listDir.filter(dir => dir != "session")
-            .map(async dir => {
-                const userCode = dir.split("-")[1]
-                const userInfo = await users.getUser(userCode)
-                await startClient(false, userInfo[0])
-            })
-        })
-        .then(function(){
-            app.listen(port, async function () {
-                console.log(moment().format() + ': Express server lisening on port ' + port);
-            });
-        })
-    }
+    })
+
+sess.listDirectories('./.wwebjs_auth')
+.then(async function(listDir){
+    listDir.filter(dir => dir != "session")
+    .map(async dir => {
+        const userCode = dir.split("-")[1]
+        const userInfo = await axios.get("http://"+process.env.API_URL + "/simpelapi/api/userwa/" + userCode)
+        console.log("user code:", userInfo.data.message.user_code)
+        await startClient(false, userInfo.data.message)
+    })
+})
+.then(function(){
+    app.listen(port, async function () {
+        console.log(moment().format() + ': Express server lisening on port ' + port);
+    }); 
 })
 
 async function callWebhook(data, clientId) {
@@ -255,7 +261,7 @@ async function startClient(withQR, userInfo){
         console.log(moment().format() + ': Client with id ' +userInfo.user_code+ ' is ready!');
         clientMap[userInfo.user_code] = {client: clientPre, statusConn : true, createdOn : Math.abs(new Date()), userInfo : userInfo}
 
-        // messaging.getAndSend(clientPre)
+        messaging.getAndSend(clientPre)
     });
 
     handlingEventClient(clientPre, userInfo)
@@ -327,7 +333,7 @@ function handlingEventClient(client, userInfo){
             return
         }
 
-        callInsertMessageHistory(id, to, "outbound", msg.body)
+        // callInsertMessageHistory(id, to, "outbound", msg.body)
     })
 
     client.on('disconnected', rsn => {
